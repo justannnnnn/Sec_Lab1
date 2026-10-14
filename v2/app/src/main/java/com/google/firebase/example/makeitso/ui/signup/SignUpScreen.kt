@@ -1,5 +1,6 @@
 package com.google.firebase.example.makeitso.ui.signup
 
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -31,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.firebase.example.makeitso.R
 import com.google.firebase.example.makeitso.data.model.ErrorMessage
+import com.google.firebase.example.makeitso.ui.shared.AuthWithGoogleButton
 import com.google.firebase.example.makeitso.ui.shared.StandardButton
 import com.google.firebase.example.makeitso.ui.theme.MakeItSoTheme
 import kotlinx.serialization.Serializable
@@ -51,6 +54,7 @@ fun SignUpScreen(
     } else {
         SignUpScreenContent(
             signUp = viewModel::signUp,
+            signUpWithGoogle = viewModel::signUpWithGoogle,
             showErrorSnackbar = showErrorSnackbar
         )
     }
@@ -59,9 +63,13 @@ fun SignUpScreen(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun SignUpScreenContent(
-    signUp: (String, String, String, (ErrorMessage) -> Unit) -> Unit,
+    signUp: (Activity, String, String, String, (ErrorMessage) -> Unit) -> Unit,
+    signUpWithGoogle: (Activity, (ErrorMessage) -> Unit) -> Unit,
     showErrorSnackbar: (ErrorMessage) -> Unit
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
@@ -142,19 +150,19 @@ fun SignUpScreenContent(
                 StandardButton(
                     label = R.string.sign_up_with_email,
                     onButtonClick = {
-                        signUp(
-                            email,
-                            password,
-                            repeatPassword,
-                            showErrorSnackbar
-                        )
+                        if (activity != null) {
+                            signUp(activity, email, password, repeatPassword, showErrorSnackbar)
+                        }
                     }
                 )
 
                 Spacer(Modifier.size(16.dp))
 
-                //TODO: Uncomment line below when Google Authentication is implemented
-                //AuthWithGoogleButton(R.string.sign_up_with_google) { }
+                AuthWithGoogleButton(R.string.sign_up_with_google) {
+                    if (activity != null) {
+                        signUpWithGoogle(activity, showErrorSnackbar)
+                    }
+                }
             }
         }
     }
@@ -165,7 +173,8 @@ fun SignUpScreenContent(
 fun SignUpScreenPreview() {
     MakeItSoTheme(darkTheme = true) {
         SignUpScreenContent(
-            signUp = { _, _, _, _ -> },
+            signUp = { _, _, _, _, _-> },
+            signUpWithGoogle = {_, _ -> },
             showErrorSnackbar = {}
         )
     }

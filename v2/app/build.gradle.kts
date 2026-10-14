@@ -11,7 +11,7 @@ plugins {
 
 android {
     namespace = "com.google.firebase.example.makeitso"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.google.firebase.example.makeitso"
@@ -76,4 +76,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //noinspection LoginCredentials
+    implementation(libs.androidx.credentials)
+    //noinspection LoginCredentials
+    implementation(libs.androidx.credentials.play.services.auth)
+    //noinspection LoginCredentials
+    implementation(libs.googleid)
 }

@@ -1,7 +1,9 @@
 package com.google.firebase.example.makeitso.ui.signup
 
+import android.app.Activity
 import com.google.firebase.example.makeitso.MainViewModel
 import com.google.firebase.example.makeitso.R
+import com.google.firebase.example.makeitso.data.AppCredentialManager
 import com.google.firebase.example.makeitso.data.model.ErrorMessage
 import com.google.firebase.example.makeitso.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,13 +14,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val appCredentialManager: AppCredentialManager
 ) : MainViewModel() {
     private val _shouldRestartApp = MutableStateFlow(false)
     val shouldRestartApp: StateFlow<Boolean>
         get() = _shouldRestartApp.asStateFlow()
 
     fun signUp(
+        activity: Activity,
         email: String,
         password: String,
         repeatPassword: String,
@@ -40,7 +44,24 @@ class SignUpViewModel @Inject constructor(
         }
 
         launchCatching(showErrorSnackbar) {
-            authRepository.signUp(email, password)
+            val normalizedEmail = email.trim()
+            authRepository.signUp(normalizedEmail, password)
+            appCredentialManager.savePassword(
+                activity = activity,
+                email = normalizedEmail,
+                password = password
+            )
+            _shouldRestartApp.value = true
+        }
+    }
+
+    fun signUpWithGoogle(
+        activity: Activity,
+        showErrorSnackbar: (ErrorMessage) -> Unit
+    ) {
+        launchCatching(showErrorSnackbar) {
+            val idToken = appCredentialManager.getGoogleIdToken(activity)
+            authRepository.linkGoogleToGuest(idToken)
             _shouldRestartApp.value = true
         }
     }

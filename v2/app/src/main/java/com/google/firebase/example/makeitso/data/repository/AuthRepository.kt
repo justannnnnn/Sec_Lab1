@@ -8,8 +8,10 @@ import javax.inject.Inject
 class AuthRepository @Inject constructor(
     private val authRemoteDataSource: AuthRemoteDataSource
 ) {
-    val currentUser: FirebaseUser? = authRemoteDataSource.currentUser
-    val currentUserIdFlow: Flow<String?> = authRemoteDataSource.currentUserIdFlow
+    val currentUser: FirebaseUser?
+        get() = authRemoteDataSource.currentUser
+    val currentUserIdFlow: Flow<String?>
+        get() = authRemoteDataSource.currentUserIdFlow
 
     suspend fun createGuestAccount() {
         authRemoteDataSource.createGuestAccount()
@@ -19,11 +21,19 @@ class AuthRepository @Inject constructor(
         authRemoteDataSource.signIn(email, password)
     }
 
-    suspend fun signUp(email: String, password: String) {
-       authRemoteDataSource.linkAccount(email, password)
+    suspend fun signInWithGoogle(idToken: String) {
+        authRemoteDataSource.signInWithGoogle(idToken)
     }
 
-    fun signOut() {
+    suspend fun linkGoogleToGuest(idToken: String) {
+        authRemoteDataSource.linkGoogleToGuest(idToken)
+    }
+
+    suspend fun signUp(email: String, password: String) {
+       authRemoteDataSource.signUp(email, password)
+    }
+
+    suspend fun signOut() {
         authRemoteDataSource.signOut()
     }
 

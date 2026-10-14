@@ -1,13 +1,16 @@
 package com.google.firebase.example.makeitso.ui.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +48,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val shouldRestartApp by viewModel.shouldRestartApp.collectAsStateWithLifecycle()
+    val profile by viewModel.profile.collectAsStateWithLifecycle()
 
     if (shouldRestartApp) {
         openHomeScreen()
@@ -56,7 +60,8 @@ fun SettingsScreen(
             openSignInScreen = openSignInScreen,
             signOut = viewModel::signOut,
             deleteAccount = viewModel::deleteAccount,
-            isAnonymous = isAnonymous
+            isAnonymous = isAnonymous,
+            profile = profile
         )
     }
 }
@@ -68,7 +73,8 @@ fun SettingsScreenContent(
     openSignInScreen: () -> Unit,
     signOut: () -> Unit,
     deleteAccount: () -> Unit,
-    isAnonymous: Boolean
+    isAnonymous: Boolean,
+    profile: UserProfileUiState?
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -94,6 +100,39 @@ fun SettingsScreenContent(
                     bottom = 4.dp
                 )
         ) {
+            Spacer(Modifier.size(24.dp))
+
+            profile?.let { user ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Профиль пользователя",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    Text(
+                        text = "Имя: ${user.displayName ?: "Не указано"}"
+                    )
+
+                    Text(
+                        text = "Email: ${user.email ?: "Не указан"}"
+                    )
+
+                    Text(
+                        text = "Способ входа: ${user.authMethod}"
+                    )
+
+                    Text(
+                        text = "UID: ${user.uid}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
             Spacer(Modifier.size(24.dp))
 
             if (isAnonymous) {
@@ -179,7 +218,8 @@ fun SettingsScreenPreview() {
             openSignInScreen = {},
             signOut = {},
             deleteAccount = {},
-            isAnonymous = false
+            isAnonymous = false,
+            profile = null
         )
     }
 }

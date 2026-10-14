@@ -76,7 +76,12 @@ class MainActivity : ComponentActivity() {
                             ) }
                             composable<SettingsRoute> { SettingsScreen(
                                 openHomeScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                    navController.navigate(TodoListRoute) {
+                                        popUpTo(navController.graph.id) {
+                                            inclusive = true
+                                        }
+                                        launchSingleTop = true
+                                    }
                                 },
                                 openSignInScreen = {
                                     navController.navigate(SignInRoute) { launchSingleTop = true }
@@ -84,7 +89,12 @@ class MainActivity : ComponentActivity() {
                             ) }
                             composable<SignInRoute> { SignInScreen(
                                 openHomeScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                    navController.navigate(TodoListRoute) {
+                                        popUpTo(navController.graph.id) {
+                                            inclusive = true
+                                        }
+                                        launchSingleTop = true
+                                    }
                                 },
                                 openSignUpScreen = {
                                     navController.navigate(SignUpRoute) { launchSingleTop = true }
@@ -96,7 +106,12 @@ class MainActivity : ComponentActivity() {
                             ) }
                             composable<SignUpRoute> { SignUpScreen(
                                 openHomeScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                    navController.navigate(TodoListRoute) {
+                                        popUpTo(navController.graph.id) {
+                                            inclusive = true
+                                        }
+                                        launchSingleTop = true
+                                    }
                                 },
                                 showErrorSnackbar = { errorMessage ->
                                     val message = getErrorMessage(errorMessage)
