@@ -56,24 +56,15 @@ fun TodoListScreen(
     openTodoItemScreen: (String) -> Unit,
     viewModel: TodoListViewModel = hiltViewModel()
 ) {
-    val isLoadingUser by viewModel.isLoadingUser.collectAsStateWithLifecycle()
 
-    if (isLoadingUser) {
-        LoadingIndicator()
-    } else {
-        val todoItems = viewModel.todoItems.collectAsStateWithLifecycle(emptyList())
+    val todoItems = viewModel.todoItems.collectAsStateWithLifecycle(emptyList())
 
-        TodoListScreenContent(
-            todoItems = todoItems.value,
-            openSettingsScreen = openSettingsScreen,
-            openTodoItemScreen = openTodoItemScreen,
-            updateItem = viewModel::updateItem
-        )
-    }
-
-    LaunchedEffect(true) {
-        viewModel.loadCurrentUser()
-    }
+    TodoListScreenContent(
+        todoItems = todoItems.value,
+        openSettingsScreen = openSettingsScreen,
+        openTodoItemScreen = openTodoItemScreen,
+        updateItem = viewModel::updateItem
+    )
 }
 
 @Composable
@@ -165,10 +156,12 @@ fun TodoItem(
 
         Text(
             text = todoItem.title,
-            modifier = Modifier.weight(1f).clickable(
-                interactionSource = null,
-                indication = null
-            ) { openTodoItemScreen(todoItem.id) }
+            modifier = Modifier
+                .weight(1f)
+                .clickable(
+                    interactionSource = null,
+                    indication = null
+                ) { openTodoItemScreen(todoItem.id) }
         )
 
         if (todoItem.flagged) {

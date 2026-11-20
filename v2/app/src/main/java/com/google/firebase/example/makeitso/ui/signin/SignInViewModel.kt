@@ -3,6 +3,7 @@ package com.google.firebase.example.makeitso.ui.signin
 import android.app.Activity
 import com.google.firebase.example.makeitso.MainViewModel
 import com.google.firebase.example.makeitso.data.AppCredentialManager
+import com.google.firebase.example.makeitso.data.SignInCredential
 import com.google.firebase.example.makeitso.data.model.ErrorMessage
 import com.google.firebase.example.makeitso.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -55,14 +56,23 @@ class SignInViewModel @Inject constructor(
         showErrorSnackbar: (ErrorMessage) -> Unit
     ) {
         launchCatching(showErrorSnackbar) {
-            val credential =
-                appCredentialManager.getSavedPassword(activity)
-                    ?: return@launchCatching
+            when (
+                val credential =
+                    appCredentialManager.getSignInCredential(activity) ?: return@launchCatching
+            ) {
+                is SignInCredential.Password -> {
+                    authRepository.signIn(
+                        email = credential.email,
+                        password = credential.password
+                    )
+                }
 
-            authRepository.signIn(
-                email = credential.id,
-                password = credential.password
-            )
+                is SignInCredential.Google -> {
+                    authRepository.signInWithGoogle(
+                        idToken = credential.idToken
+                    )
+                }
+            }
 
             _shouldRestartApp.value = true
         }

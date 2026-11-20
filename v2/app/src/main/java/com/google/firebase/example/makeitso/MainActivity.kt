@@ -19,6 +19,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.example.makeitso.data.model.ErrorMessage
+import com.google.firebase.example.makeitso.data.repository.AuthRepository
+import com.google.firebase.example.makeitso.ui.AuthGate
+import com.google.firebase.example.makeitso.ui.AuthGateRoute
 import com.google.firebase.example.makeitso.ui.home.HomeRoute
 import com.google.firebase.example.makeitso.ui.home.HomeScreen
 import com.google.firebase.example.makeitso.ui.settings.SettingsRoute
@@ -34,9 +37,14 @@ import com.google.firebase.example.makeitso.ui.todolist.TodoListRoute
 import com.google.firebase.example.makeitso.ui.todolist.TodoListScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var authRepository: AuthRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -58,9 +66,30 @@ class MainActivity : ComponentActivity() {
                     ) { innerPadding ->
                         NavHost(
                             navController = navController,
-                            startDestination = TodoListRoute,
+                            startDestination = AuthGateRoute,
                             modifier = Modifier.padding(innerPadding)
                         ) {
+                            composable<AuthGateRoute> {
+                                AuthGate(
+                                    authRepository = authRepository,
+                                    openTodo = {
+                                        navController.navigate(TodoListRoute) {
+                                            popUpTo<AuthGateRoute> {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                    openSignIn = {
+                                        navController.navigate(SignInRoute) {
+                                            popUpTo<AuthGateRoute> {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                )
+                            }
                             composable<HomeRoute> { HomeScreen(
                                 openSettingsScreen = {
                                     navController.navigate(SettingsRoute) { launchSingleTop = true }
@@ -76,7 +105,7 @@ class MainActivity : ComponentActivity() {
                             ) }
                             composable<SettingsRoute> { SettingsScreen(
                                 openHomeScreen = {
-                                    navController.navigate(TodoListRoute) {
+                                    navController.navigate(SignInRoute) {
                                         popUpTo(navController.graph.id) {
                                             inclusive = true
                                         }

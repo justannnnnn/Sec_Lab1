@@ -13,9 +13,8 @@ class AuthRepository @Inject constructor(
     val currentUserIdFlow: Flow<String?>
         get() = authRemoteDataSource.currentUserIdFlow
 
-    suspend fun createGuestAccount() {
-        authRemoteDataSource.createGuestAccount()
-    }
+    val isAuthenticatedFlow: Flow<Boolean?>
+        get() = authRemoteDataSource.isAuthenticatedFlow
 
     suspend fun signIn(email: String, password: String) {
         authRemoteDataSource.signIn(email, password)

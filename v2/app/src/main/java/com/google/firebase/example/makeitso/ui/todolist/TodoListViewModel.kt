@@ -15,21 +15,7 @@ class TodoListViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val todoItemRepository: TodoItemRepository
 ) : MainViewModel() {
-    private val _isLoadingUser = MutableStateFlow(true)
-    val isLoadingUser: StateFlow<Boolean>
-        get() = _isLoadingUser.asStateFlow()
-
     val todoItems = todoItemRepository.getTodoItems(authRepository.currentUserIdFlow)
-
-    fun loadCurrentUser() {
-        launchCatching {
-            if (authRepository.currentUser == null) {
-                authRepository.createGuestAccount()
-            }
-
-            _isLoadingUser.value = false
-        }
-    }
 
     fun updateItem(item: TodoItem) {
         launchCatching {

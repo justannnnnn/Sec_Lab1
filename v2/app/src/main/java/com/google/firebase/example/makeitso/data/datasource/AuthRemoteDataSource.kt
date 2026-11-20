@@ -21,9 +21,19 @@ class AuthRemoteDataSource @Inject constructor(private val auth: FirebaseAuth) {
             awaitClose { auth.removeAuthStateListener(listener) }
         }
 
-    suspend fun createGuestAccount() {
-        auth.signInAnonymously().await()
-    }
+    val isAuthenticatedFlow: Flow<Boolean?>
+        get() = callbackFlow {
+            val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+                val user = firebaseAuth.currentUser
+                trySend(user != null && !user.isAnonymous)
+            }
+
+            auth.addAuthStateListener(listener)
+
+            awaitClose {
+                auth.removeAuthStateListener(listener)
+            }
+        }
 
     suspend fun signUp(email: String, password: String) {
         val user = auth.currentUser
@@ -42,17 +52,14 @@ class AuthRemoteDataSource @Inject constructor(private val auth: FirebaseAuth) {
 
     suspend fun signInWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-
         auth.signInWithCredential(credential).await()
     }
 
     suspend fun linkGoogleToGuest(idToken: String) {
         val user = auth.currentUser
-
         if (user?.isAnonymous != true) {
             throw IllegalStateException("Для привязки Google нужен гостевой аккаунт")
         }
-
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         user.linkWithCredential(credential).await()
     }
@@ -74,9 +81,7 @@ class AuthRemoteDataSource @Inject constructor(private val auth: FirebaseAuth) {
     }
 
     suspend fun deleteAccount() {
-        val user = auth.currentUser
-            ?: error("Пользователь не авторизован")
-
+        val user = auth.currentUser ?: error("Пользователь не авторизован")
         user.delete().await()
     }
 }

@@ -4,11 +4,12 @@ import android.app.Activity
 import android.content.Context
 import androidx.credentials.CreatePasswordRequest
 import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPasswordOption
 import androidx.credentials.PasswordCredential
 import androidx.credentials.exceptions.CreateCredentialException
-import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.example.makeitso.R
@@ -19,25 +20,6 @@ class AppCredentialManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val credentialManager = CredentialManager.create(context)
-
-    suspend fun getSavedPassword(
-        activity: Activity
-    ): PasswordCredential? {
-        return try {
-            val request = GetCredentialRequest(
-                credentialOptions = listOf(GetPasswordOption())
-            )
-
-            val result = credentialManager.getCredential(
-                context = activity,
-                request = request
-            )
-
-            result.credential as? PasswordCredential
-        } catch (e: GetCredentialException) {
-            null
-        }
-    }
 
     suspend fun savePassword(
         activity: Activity,
@@ -81,4 +63,70 @@ class AppCredentialManager @Inject constructor(
 
         return credential.idToken
     }
+
+    suspend fun getSignInCredential(
+        activity: Activity
+    ): SignInCredential? {
+        return try {
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setServerClientId(context.getString(R.string.default_web_client_id))
+                .setFilterByAuthorizedAccounts(false)
+                .build()
+
+            val request = GetCredentialRequest(
+                credentialOptions = listOf(
+                    GetPasswordOption(),
+                    googleIdOption
+                )
+            )
+
+            val result = credentialManager.getCredential(
+                context = activity,
+                request = request
+            )
+
+            return when (val credential = result.credential) {
+                is PasswordCredential -> {
+                    SignInCredential.Password(
+                        email = credential.id,
+                        password = credential.password
+                    )
+                }
+
+                is CustomCredential -> {
+                    if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                        val googleCredential =
+                            GoogleIdTokenCredential.createFrom(credential.data)
+
+                        SignInCredential.Google(
+                            idToken = googleCredential.idToken
+                        )
+                    } else {
+                        throw IllegalStateException(
+                            "Unsupported credential type: ${credential.type}"
+                        )
+                    }
+                }
+
+                else -> {
+                    throw IllegalStateException(
+                        "Unsupported credential type: ${credential::class.java.name}"
+                    )
+                }
+            }
+        } catch (e: NoCredentialException) {
+            null
+        }
+    }
+}
+
+sealed interface SignInCredential {
+    data class Password(
+        val email: String,
+        val password: String
+    ) : SignInCredential
+
+    data class Google(
+        val idToken: String
+    ) : SignInCredential
 }
